@@ -1,0 +1,16 @@
+_ReSharper*
+bin
+obj
+*.user
+*.patch
+*.hg
+*.sln.cache
+*.orig
+*.suo
+*.vs10x
+*.vsp
+*.psess
+*.docstates
+TestResults
+[Tt]humbs.db
+packages
