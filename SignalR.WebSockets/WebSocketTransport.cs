@@ -69,8 +69,10 @@ namespace SignalR.Transports {
         }
 
         private async Task ProcessMessages(IConnection connection) {
+            long? lastMessageId = null;
             while (!_connectionTokenSource.IsCancellationRequested) {
-                PersistentResponse response = await connection.ReceiveAsync();
+                PersistentResponse response = lastMessageId == null ? await connection.ReceiveAsync() : await connection.ReceiveAsync(lastMessageId.Value);
+                lastMessageId = response.MessageId;
                 Send(response);
             }
         }
