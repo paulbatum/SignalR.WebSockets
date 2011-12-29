@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Web.WebSockets;
+using SignalR.Abstractions;
 
 namespace SignalR.Transports
 {
     public class WebSocketTransport : WebSocketHandler, ITransport
     {
-        private readonly HttpContextBase _context;
+        private readonly HostContext _context;
         private readonly IJsonSerializer _stringifier;
         private readonly CancellationTokenSource _connectionTokenSource;
-        private IConnection _connection;
+        private IReceivingConnection _connection;
 
-        public WebSocketTransport(HttpContextBase context, IJsonSerializer stringifier)
+        public WebSocketTransport(HostContext context, IJsonSerializer stringifier)
         {
             _context = context;
             _stringifier = stringifier;
@@ -28,12 +31,13 @@ namespace SignalR.Transports
 
         public new event Action<Exception> Error;
 
-        public Func<Task> ProcessRequest(IConnection connection)
+        public Func<Task> ProcessRequest(IReceivingConnection connection)
         {
-            // Never time out for websocket requests
+            // Never time out for websocket requests            
             connection.ReceiveTimeout = TimeSpan.FromTicks(Int32.MaxValue - 1);
 
-            _context.AcceptWebSocketRequest(this);
+            var httpContext = (HttpContextWrapper)_context.Items["aspnet.context"];            
+            httpContext.AcceptWebSocketRequest(this);
 
             _connection = connection;
 
@@ -76,12 +80,13 @@ namespace SignalR.Transports
             }
         }
 
-        public void Send(object value)
-        {
+        public Task Send(object value)
+        {            
             base.Send(_stringifier.Stringify(value));
+            return Task.FromResult<object>(null);
         }
 
-        private async Task ProcessMessages(IConnection connection)
+        private async Task ProcessMessages(IReceivingConnection connection)
         {
             long? lastMessageId = null;
             while (!_connectionTokenSource.IsCancellationRequested)
@@ -89,6 +94,30 @@ namespace SignalR.Transports
                 PersistentResponse response = lastMessageId == null ? await connection.ReceiveAsync() : await connection.ReceiveAsync(lastMessageId.Value);
                 lastMessageId = response.MessageId;
                 Send(response);
+            }
+        }
+
+
+        public string ConnectionId
+        {
+            get
+            {
+                return _context.Request.QueryString["connectionId"];
+            }
+        }
+
+        public IEnumerable<string> Groups
+        {
+            get
+            {
+                string groupValue = _context.Request.QueryString["groups"];
+
+                if (String.IsNullOrEmpty(groupValue))
+                {
+                    return Enumerable.Empty<string>();
+                }
+
+                return groupValue.Split(',');
             }
         }
     }
