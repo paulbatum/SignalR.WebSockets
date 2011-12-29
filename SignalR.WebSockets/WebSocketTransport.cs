@@ -9,11 +9,11 @@ namespace SignalR.Transports
     public class WebSocketTransport : WebSocketHandler, ITransport
     {
         private readonly HttpContextBase _context;
-        private readonly IJsonStringifier _stringifier;
+        private readonly IJsonSerializer _stringifier;
         private readonly CancellationTokenSource _connectionTokenSource;
         private IConnection _connection;
 
-        public WebSocketTransport(HttpContextBase context, IJsonStringifier stringifier)
+        public WebSocketTransport(HttpContextBase context, IJsonSerializer stringifier)
         {
             _context = context;
             _stringifier = stringifier;

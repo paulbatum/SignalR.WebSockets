@@ -9,8 +9,8 @@ namespace SignalR.WebStart
     public static class PreApplicationStart
     {
         public static void Start()
-        {            
-            TransportManager.Register("webSockets", context => new WebSocketTransport(context, DependencyResolver.Resolve<IJsonStringifier>()));
+        {
+            TransportManager.Register("webSockets", context => new WebSocketTransport(context, DependencyResolver.Resolve<IJsonSerializer>()));
         }
     }
 }
