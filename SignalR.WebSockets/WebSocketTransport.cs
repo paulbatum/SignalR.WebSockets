@@ -36,7 +36,7 @@ namespace SignalR.Transports
             // Never time out for websocket requests            
             connection.ReceiveTimeout = TimeSpan.FromTicks(Int32.MaxValue - 1);
 
-            var httpContext = (HttpContextWrapper)_context.Items["aspnet.HttpContext"];            
+            var httpContext = (HttpContextBase)_context.Items["aspnet.HttpContext"];            
             httpContext.AcceptWebSocketRequest(this);
 
             _connection = connection;
